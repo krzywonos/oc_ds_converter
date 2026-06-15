@@ -59,7 +59,22 @@ def preprocess(datacite_json_dir:str, publishers_filepath:str|None, orcid_doi_fi
             log = '[INFO: datacite_process] Processing: ' + '; '.join(what)
             print(log)
 
-    orcid_doi_filepath = CSVManager(orcid_doi_filepath)
+    # orcid_doi_filepath = CSVManager(orcid_doi_filepath)
+
+    if redis_storage_manager:
+        orcid_index_redis = OrcidIndexRedis(testing=testing)
+        if orcid_doi_filepath:
+            console.print('[cyan]Updating DOI-ORCID index in Redis...[/cyan]')
+            orcid_index_redis.clear()
+            load_orcid_index_to_redis(
+                orcid_doi_filepath, orcid_index_redis, max_workers=max_workers
+            )
+            console.print('[green]DOI-ORCID index updated in Redis[/green]')
+        else:
+            console.print('[cyan]Using existing DOI-ORCID index from Redis[/cyan]')
+        orcid_doi_filepath: str | None = None
+    else:
+        orcid_doi_filepath = orcid_doi_filepath
 
     if verbose:
         console.print(f'[cyan]Getting all files from {datacite_json_dir}[/cyan]')
@@ -277,6 +292,7 @@ def get_citations_and_metadata(json_file:str, chunk: list, preprocessed_citation
                         all_br.extend(ent_all_br)
                         all_ra.extend(ent_all_ra)
 
+        dc_csv.prefetch_doi_orcid_index(all_dois_for_orcid_index)
         redis_validity_values_br = dc_csv.get_reids_validity_list(all_br, "br")
         redis_validity_values_ra = dc_csv.get_reids_validity_list(all_ra, "ra")
         dc_csv.update_redis_values(redis_validity_values_br, redis_validity_values_ra)
