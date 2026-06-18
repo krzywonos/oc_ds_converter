@@ -43,6 +43,7 @@ from typing import List, Tuple
 
 from bs4 import BeautifulSoup
 
+from oc_ds_converter.datasource.orcid_index import OrcidIndexRedis
 from oc_ds_converter.datasource.redis import FakeRedisWrapper, RedisDataSource
 from oc_ds_converter.lib.cleaner import Cleaner
 from oc_ds_converter.oc_idmanager.doi import DOIManager
@@ -62,7 +63,12 @@ class DataciteProcessing(RaProcessor):
                  testing: bool = True, storage_manager: Optional[StorageManager] = None,
                  use_orcid_api: bool = True, use_ror_api: bool = True, use_viaf_api:bool = True, use_wikidata_api:bool = True,
                  exclude_existing: bool = False):
-        super(DataciteProcessing, self).__init__(orcid_index)
+        orcid_index_obj = (
+            OrcidIndexRedis(testing=testing)
+            if orcid_index is None
+            else orcid_index
+        )
+        super(DataciteProcessing, self).__init__(orcid_index_obj)
         # self.preprocessor = DatacitePreProcessing(inp_dir, out_dir, interval, filter)
         if storage_manager is None:
             self.storage_manager = RedisStorageManager(testing=testing)

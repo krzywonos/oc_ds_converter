@@ -72,9 +72,9 @@ def preprocess(datacite_json_dir:str, publishers_filepath:str|None, orcid_doi_fi
             console.print('[green]DOI-ORCID index updated in Redis[/green]')
         else:
             console.print('[cyan]Using existing DOI-ORCID index from Redis[/cyan]')
-        orcid_doi_filepath: str | None = None
+        orcid_index_for_processor: str | None = None
     else:
-        orcid_doi_filepath = orcid_doi_filepath
+        orcid_index_for_processor = orcid_doi_filepath
 
     if verbose:
         console.print(f'[cyan]Getting all files from {datacite_json_dir}[/cyan]')
@@ -95,7 +95,7 @@ def preprocess(datacite_json_dir:str, publishers_filepath:str|None, orcid_doi_fi
             for json_file in all_input_json:
                 chunk = read_json(json_file, bad_dir)
                 if chunk:
-                    was_processed = get_citations_and_metadata(json_file, chunk, preprocessed_citations_dir, csv_dir, orcid_doi_filepath,
+                    was_processed = get_citations_and_metadata(json_file, chunk, preprocessed_citations_dir, csv_dir, orcid_index_for_processor,
                                        wanted_doi_filepath, publishers_filepath, storage_path,
                                        redis_storage_manager,
                                        testing, cache, is_first_iteration=True, use_orcid_api=use_orcid_api, use_ror_api=use_ror_api,
@@ -111,7 +111,7 @@ def preprocess(datacite_json_dir:str, publishers_filepath:str|None, orcid_doi_fi
                 if json_file not in bad_list:
                     chunk = read_json(json_file, bad_dir)
                     if chunk:
-                        was_processed = get_citations_and_metadata(json_file, chunk, preprocessed_citations_dir, csv_dir, orcid_doi_filepath,
+                        was_processed = get_citations_and_metadata(json_file, chunk, preprocessed_citations_dir, csv_dir, orcid_index_for_processor,
                                         wanted_doi_filepath, publishers_filepath, storage_path,
                                         redis_storage_manager,
                                         testing, cache, is_first_iteration=False, use_orcid_api=use_orcid_api, use_ror_api=use_ror_api,
@@ -132,7 +132,7 @@ def preprocess(datacite_json_dir:str, publishers_filepath:str|None, orcid_doi_fi
                     future = executor.submit(
                         get_citations_and_metadata,
                         json_file, chunk, preprocessed_citations_dir, csv_dir,
-                        orcid_doi_filepath, wanted_doi_filepath,
+                        orcid_index_for_processor, wanted_doi_filepath,
                         publishers_filepath, storage_path, redis_storage_manager,
                         testing, cache, True, use_orcid_api, use_ror_api, use_viaf_api, use_wikidata_api)
                     futures_pass1.append(future)
@@ -152,7 +152,7 @@ def preprocess(datacite_json_dir:str, publishers_filepath:str|None, orcid_doi_fi
                     future = executor.submit(
                         get_citations_and_metadata,
                         json_file, chunk, preprocessed_citations_dir, csv_dir,
-                        orcid_doi_filepath, wanted_doi_filepath,
+                        orcid_index_for_processor, wanted_doi_filepath,
                         publishers_filepath, storage_path, redis_storage_manager,
                         testing, cache, False, use_orcid_api, use_ror_api, use_viaf_api, use_wikidata_api)
                     futures_pass2.append(future)
